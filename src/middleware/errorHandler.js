@@ -1,9 +1,9 @@
-// Глобальный обработчик ошибок
 const errorHandler = (err, req, res, next) => {
     console.error('Ошибка:', err.stack);
-    res.status(500).json({ 
+
+    res.status(500).json({
         error: 'Внутренняя ошибка сервера',
-        message: err.message 
+        message: err.message
     });
 };
 
