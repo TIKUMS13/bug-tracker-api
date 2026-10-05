@@ -4,20 +4,22 @@ const app = express();
 
 const { sequelize } = require('./models');
 const bugRoutes = require('./src/routes/bugRoutes');
+const authRoutes = require('./src/routes/authRoutes');  // ← НОВОЕ
 const errorHandler = require('./src/middleware/errorHandler');
 
-// Middleware для парсинга JSON
 app.use(express.json());
 
-// Маршруты
-app.use('/bugs', bugRoutes);
+// Публичные маршруты
+app.use('/auth', authRoutes);   // ← НОВОЕ
 
-// Глобальный обработчик ошибок (должен быть последним!)
+// Защищённые маршруты (баги доступны только авторизованным)
+const authMiddleware = require('./src/middleware/auth');
+app.use('/bugs', authMiddleware, bugRoutes);  // ← ЗАЩИЩЕНО!
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 
-// Подключение к БД и запуск сервера
 async function start() {
     try {
         await sequelize.authenticate();
@@ -25,9 +27,14 @@ async function start() {
 
         app.listen(PORT, () => {
             console.log(`🚀 Сервер Bug Tracker запущен на http://localhost:${PORT}`);
-            console.log(`Доступные эндпоинты:`);
-            console.log(`  GET    /bugs      - список всех багов`);
-            console.log(`  GET    /bugs/:id  - конкретный баг`);
+            console.log(`\n🔐 Auth эндпоинты:`);
+            console.log(`  POST   /auth/register  - регистрация`);
+            console.log(`  POST   /auth/login     - вход`);
+            console.log(`  GET    /auth/profile   - профиль (JWT)`);
+            console.log(`  GET    /auth/users     - все пользователи (admin)`);
+            console.log(`\n🐛 Bug эндпоинты (требуется JWT):`);
+            console.log(`  GET    /bugs      - список багов`);
+            console.log(`  GET    /bugs/:id  - баг по ID`);
             console.log(`  POST   /bugs      - создать баг`);
             console.log(`  PUT    /bugs/:id  - обновить баг`);
             console.log(`  DELETE /bugs/:id  - удалить баг`);
