@@ -1,81 +1,80 @@
 import { useState, useEffect } from 'react';
 import BugItem from './BugItem';
 import AddBugForm from './AddBugForm';
+import { fetchBugs, addBug, updateBug, deleteBug } from '../api';
 
-// Функция для начальных (моковых) данных
-const getDefaultBugs = () => [
-  { id: 1, title: 'Ошибка входа', priority: 'Высокий', status: 'Новый', assignee: 'Иван' },
-  { id: 2, title: 'Не работает кнопка', priority: 'Средний', status: 'В работе', assignee: 'Петр' },
-  { id: 3, title: 'Слетает верстка', priority: 'Высокий', status: 'Готов', assignee: 'Мария' },
-];
-
-function BugList() {
-  // 1. Массив багов (изначально пустой)
+function BugList({ user }) {
   const [bugs, setBugs] = useState([]);
-
-  // 2. Флаг, что данные загружены (чтобы не сохранять пустой массив при первом рендере)
-  const [loaded, setLoaded] = useState(false);
-
-  // 3. Состояние фильтра
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
 
-  // 4. useEffect с ПУСТЫМ массивом — загрузка при монтировании
-  useEffect(() => {
-    const saved = localStorage.getItem('bugs');
-    
-    if (saved) {
-      try {
-        setBugs(JSON.parse(saved));
-      } catch (e) {
-        console.error('Ошибка парсинга localStorage:', e);
-        setBugs(getDefaultBugs());
+  const loadBugs = async (signal) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetchBugs(signal);
+      setBugs(response.data);
+    } catch (err) {
+      if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
+        setError('Не удалось загрузить список багов. Проверьте, запущен ли сервер.');
       }
-    } else {
-      setBugs(getDefaultBugs());
+    } finally {
+      if (!signal || !signal.aborted) {
+        setLoading(false);
+      }
     }
-    
-    setLoaded(true);
-  }, []); // ← Пустой массив = только при монтировании
+  };
 
-  // 5. useEffect с зависимостью [bugs] — сохранение в localStorage
   useEffect(() => {
-    // Сохраняем только после загрузки (чтобы не перезаписать пустым массивом)
-    if (loaded) {
-      localStorage.setItem('bugs', JSON.stringify(bugs));
+    const controller = new AbortController();
+    loadBugs(controller.signal);
+    return () => controller.abort(); 
+  }, []);
+
+  const handleRetry = () => loadBugs();
+
+  const handleAdd = async (newBug) => {
+    const tempId = Date.now();
+    const optimisticBug = { ...newBug, id: tempId, status: 'Новый' };
+    setBugs(prev => [...prev, optimisticBug]);
+
+    try {
+      const response = await addBug(newBug);
+      setBugs(prev => prev.map(b => b.id === tempId ? response.data : b));
+    } catch (err) {
+      setBugs(prev => prev.filter(b => b.id !== tempId));
+      alert('Ошибка при добавлении бага на сервер');
     }
-  }, [bugs, loaded]); // ← Зависимости: bugs и loaded
-
-  // 6. useEffect — изменение заголовка страницы
-  useEffect(() => {
-    document.title = `Bug Tracker (${bugs.length} багов)`;
-  }, [bugs.length]); // ← Зависимость: длина массива
-
-  // 7. Добавление бага
-  const addBug = (newBug) => {
-    const id = bugs.length > 0 ? Math.max(...bugs.map(b => b.id)) + 1 : 1;
-    setBugs([...bugs, { ...newBug, id }]);
   };
 
-  // 8. Удаление бага
-  const deleteBug = (id) => {
-    setBugs(bugs.filter(b => b.id !== id));
+  const handleDelete = async (id) => {
+    const deletedBug = bugs.find(b => b.id === id);
+    setBugs(prev => prev.filter(b => b.id !== id));
+    try {
+      await deleteBug(id);
+    } catch (err) {
+      setBugs(prev => [...prev, deletedBug].sort((a, b) => a.id - b.id));
+      alert('Ошибка при удалении бага');
+    }
   };
 
-  // 9. Изменение статуса (редактирование)
-  const toggleStatus = (id) => {
-    setBugs(bugs.map(b =>
-      b.id === id
-        ? { ...b, status: b.status === 'Готов' ? 'Новый' : 'Готов' }
-        : b
-    ));
+  const handleToggleStatus = async (id) => {
+    const bug = bugs.find(b => b.id === id);
+    if (!bug) return;
+    const newStatus = bug.status === 'Готов' ? 'Новый' : 'Готов';
+    setBugs(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
+
+    try {
+      await updateBug(id, { ...bug, status: newStatus });
+    } catch (err) {
+      setBugs(prev => prev.map(b => b.id === id ? bug : b));
+      alert('Ошибка при обновлении статуса');
+    }
   };
 
-  // 10. Фильтрация
-  const filteredBugs = filter === 'all'
-    ? bugs
-    : bugs.filter(b => b.status === filter);
-
-  // Статистика
+  const filteredBugs = filter === 'all' ? bugs : bugs.filter(b => b.status === filter);
+  
   const stats = {
     total: bugs.length,
     new: bugs.filter(b => b.status === 'Новый').length,
@@ -83,16 +82,18 @@ function BugList() {
     done: bugs.filter(b => b.status === 'Готов').length,
   };
 
-  // Пока данные не загружены — показываем заглушку
-  if (!loaded) {
-    return <div className="loading">Загрузка...</div>;
-  }
+  if (loading) return <div className="loading">⏳ Загрузка данных с сервера...</div>;
+  if (error) return (
+    <div className="error-box">
+      <p>❌ {error}</p>
+      <button onClick={handleRetry} className="btn-retry">🔄 Повторить</button>
+    </div>
+  );
 
   return (
     <div className="bug-list">
       <h1>🐛 Bug Tracker</h1>
 
-      {/* Статистика */}
       <div className="stats">
         <span>Всего: <strong>{stats.total}</strong></span>
         <span>Новых: <strong>{stats.new}</strong></span>
@@ -100,7 +101,6 @@ function BugList() {
         <span>Готово: <strong>{stats.done}</strong></span>
       </div>
 
-      {/* Фильтр */}
       <div className="filter">
         <label>Фильтр по статусу: </label>
         <select value={filter} onChange={(e) => setFilter(e.target.value)}>
@@ -111,10 +111,8 @@ function BugList() {
         </select>
       </div>
 
-      {/* Форма добавления */}
-      <AddBugForm onAdd={addBug} />
+      <AddBugForm onAdd={handleAdd} />
 
-      {/* Список */}
       {filteredBugs.length === 0 ? (
         <p className="empty">Нет багов по выбранному фильтру.</p>
       ) : (
@@ -123,8 +121,9 @@ function BugList() {
             <BugItem
               key={bug.id}
               bug={bug}
-              onDelete={deleteBug}
-              onToggleStatus={toggleStatus}
+              user={user}
+              onDelete={handleDelete}
+              onToggleStatus={handleToggleStatus}
             />
           ))}
         </ul>

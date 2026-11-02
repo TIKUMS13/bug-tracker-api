@@ -1,4 +1,4 @@
-\* {
+* {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -50,19 +50,12 @@ h1 {
 
 .filter {
   margin: 20px 0;
-  padding: 10px 0;
-}
-
-.filter label {
-  margin-right: 10px;
-  font-weight: 500;
 }
 
 .filter select {
   padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
-  font-size: 14px;
 }
 
 .add-form {
@@ -77,7 +70,6 @@ h1 {
   padding: 10px 14px;
   border: 1px solid #ddd;
   border-radius: 6px;
-  font-size: 14px;
   flex: 1;
   min-width: 150px;
 }
@@ -89,9 +81,6 @@ h1 {
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background 0.2s;
 }
 
 .add-form button:hover {
@@ -99,7 +88,7 @@ h1 {
 }
 
 .bugs {
-  list-style: none;
+  list-style: none; /* Убирает черные точки */
 }
 
 .bug-item {
@@ -110,15 +99,6 @@ h1 {
   border-bottom: 1px solid #eee;
   gap: 15px;
   flex-wrap: wrap;
-}
-
-.bug-item:last-child {
-  border-bottom: none;
-}
-
-.bug-info {
-  flex: 1;
-  min-width: 200px;
 }
 
 .bug-info strong {
@@ -132,36 +112,6 @@ h1 {
   margin-top: 6px;
 }
 
-.priority-высокий {
-  color: #e74c3c;
-  font-weight: bold;
-}
-
-.priority-средний {
-  color: #f39c12;
-  font-weight: bold;
-}
-
-.priority-низкий {
-  color: #27ae60;
-  font-weight: bold;
-}
-
-.status-новый {
-  color: #3498db;
-  font-weight: bold;
-}
-
-.status-в-работе {
-  color: #f39c12;
-  font-weight: bold;
-}
-
-.status-готов {
-  color: #27ae60;
-  font-weight: bold;
-}
-
 .actions {
   display: flex;
   gap: 8px;
@@ -172,8 +122,6 @@ h1 {
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
 }
 
 .btn-toggle {
@@ -194,9 +142,124 @@ h1 {
   background: #c0392b;
 }
 
-.empty {
+.loading {
   text-align: center;
-  color: #999;
+  font-size: 20px;
+  padding: 50px;
+  color: #3498db;
+}
+
+.error-box {
+  text-align: center;
   padding: 40px;
-  font-style: italic;
+  background: #fee;
+  border: 1px solid #e74c3c;
+  border-radius: 8px;
+  color: #c0392b;
+}
+
+.btn-retry {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+/* --- Стили для авторизации --- */
+.user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #2c3e50;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 15px;
+}
+
+.btn-logout {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-logout:hover { background: #c0392b; }
+
+.login-container {
+  max-width: 400px;
+  margin: 80px auto;
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.login-form input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.login-form button {
+  padding: 12px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.login-form button:disabled { background: #95a5a6; cursor: not-allowed; }
+
+.login-hint {
+  margin-top: 20px;
+  font-size: 13px;
+  color: #777;
+  text-align: left;
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px dashed #ccc;
+}
+
+.error-text {
+  color: #e74c3c;
+  font-size: 14px;
+  margin: 0;
+}
+/* Стили для переключателя Вход/Регистрация */
+.toggle-auth {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #555;
+}
+
+.toggle-auth button {
+  background: none;
+  border: none;
+  color: #3498db;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: 5px;
+  font-size: 14px;
+  padding: 0;
+}
+
+.toggle-auth button:hover {
+  color: #2980b9;
 }

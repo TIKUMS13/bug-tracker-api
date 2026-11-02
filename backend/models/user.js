@@ -4,10 +4,16 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      // Здесь будут связи (например, User.hasMany(Bug))
+      // Связь: У пользователя много созданных багов
+      User.hasMany(models.Bug, { foreignKey: 'userId', as: 'bugs' });
+      // Связь: Пользователю доступно много багов
+      User.belongsToMany(models.Bug, { 
+        through: 'BugAccess', 
+        as: 'sharedBugs', 
+        foreignKey: 'userId' 
+      });
     }
 
-    // Метод для безопасного возврата данных (без passwordHash)
     toJSON() {
       const values = { ...this.get() };
       delete values.passwordHash;
@@ -20,25 +26,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
-      validate: {
-        isEmail: { msg: 'Некорректный email' },
-        notEmpty: { msg: 'Email обязателен' }
-      }
+      validate: { isEmail: { msg: 'Некорректный email' }, notEmpty: { msg: 'Email обязателен' } }
     },
-    passwordHash: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
+    passwordHash: { type: DataTypes.STRING, allowNull: false },
     role: {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: 'user',
-      validate: {
-        isIn: {
-          args: [['user', 'admin']],
-          msg: 'Роль должна быть: user или admin'
-        }
-      }
+      validate: { isIn: { args: [['user', 'admin']], msg: 'Роль должна быть user или admin' } }
     }
   }, {
     sequelize,

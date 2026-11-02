@@ -9,13 +9,14 @@ function AddBugForm({ onAdd }) {
     e.preventDefault();
     if (!title.trim()) return;
 
+    // Вызываем коллбэк из BugList (handleAdd)
     onAdd({
       title: title.trim(),
       priority,
-      status: 'Новый',
       assignee: assignee.trim() || 'Не назначен',
     });
 
+    // Очищаем форму
     setTitle('');
     setPriority('Средний');
     setAssignee('');
@@ -29,6 +30,7 @@ function AddBugForm({ onAdd }) {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         required
+        maxLength={100}
       />
       <select value={priority} onChange={(e) => setPriority(e.target.value)}>
         <option value="Низкий">Низкий</option>
@@ -40,6 +42,7 @@ function AddBugForm({ onAdd }) {
         placeholder="Исполнитель"
         value={assignee}
         onChange={(e) => setAssignee(e.target.value)}
+        maxLength={50}
       />
       <button type="submit">➕ Добавить</button>
     </form>

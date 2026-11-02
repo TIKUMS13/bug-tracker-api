@@ -7,5 +7,6 @@ router.get('/:id', BugController.getById);
 router.post('/', BugController.create);
 router.put('/:id', BugController.update);
 router.delete('/:id', BugController.delete);
+router.post('/:id/share', BugController.share); // Новый маршрут
 
 module.exports = router;
